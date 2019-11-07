@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)http://robotics.hobbizine.com/arduinoann.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<title>Arduino Neural Network</title>
+<meta name="description" content="An artificial neural network developed on an Arduino Uno.  Includes tutorial and source code.">
+<link rel="stylesheet" type="text/css" href="./01_files/style.css">
+<link rel="preload" href="./01_files/f(7).txt" as="script"><script src="./01_files/f(5).txt"></script><script src="./01_files/osd.js.&#19979;&#36617;"></script><script src="./01_files/f(6).txt" id="google_shimpl"></script><script type="text/javascript" src="./01_files/f(7).txt"></script><link rel="preload" href="./01_files/f(8).txt" as="script"><script type="text/javascript" src="./01_files/f(8).txt"></script><link rel="preload" href="./01_files/f(6).txt" as="script"><script src="chrome-extension://jhffgcfmcckgmioipfnmbannkpncfipo/util.js"></script><script src="chrome-extension://jhffgcfmcckgmioipfnmbannkpncfipo/pagejs.js"></script></head>
+<body>
+<div id="header">
+	<div id="header_inner" class="fixed">
+		<div id="logo">
+			<a href="http://www.hobbizine.com/" style="text-decoration:none"><h1><span>Hobbizine</span></h1></a>
+			<h2>for all the things you do...</h2>
+		</div>
+		
+		<div id="menu">
+			
+		</div>
+		
+	</div>
+</div>
+<div id="main">
+	<div id="main_inner" class="fixed">
+		<div id="primaryContent_2columns">
+			<div id="columnA_2columns">
+<br>
+
+		
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-8349793200726369";
+/* Robotics and Electronics Links */
+google_ad_slot = "9731822046";
+google_ad_width = 728;
+google_ad_height = 15;
+//-->
+</script>
+<script type="text/javascript" src="./01_files/f(9).txt">
+</script><ins id="aswift_0_expand" style="display:inline-table;border:none;height:15px;margin:0;padding:0;position:relative;visibility:visible;width:728px;background-color:transparent;" data-ad-slot="9731822046" data-overlap-observer-io="false"><ins id="aswift_0_anchor" style="display:block;border:none;height:15px;margin:0;padding:0;position:relative;visibility:visible;width:728px;background-color:transparent;"><iframe width="728" height="15" frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" onload="var i=this.id,s=window.google_iframe_oncopy,H=s&amp;&amp;s.handlers,h=H&amp;&amp;H[i],w=this.contentWindow,d;try{d=w.document}catch(e){}if(h&amp;&amp;d&amp;&amp;(!d.body||!d.body.firstChild)){if(h.call){setTimeout(h,0)}else if(h.match){try{h=s.upd(h,i)}catch(e){}w.location.replace(h)}}" id="aswift_0" name="aswift_0" style="left:0;position:absolute;top:0;border:0px;width:728px;height:15px;" src="./01_files/saved_resource(1).html"></iframe></ins></ins>
+
+<br>
+<br>
+
+<h3>A Neural Network for Arduino</h3>
+<br>
+<p>
+This article presents an artificial neural network developed for an Arduino Uno microcontroller board.  The network described here is a feed-forward backpropagation network, which is perhaps the most common type.  It is considered a good, general purpose network for either supervised or unsupervised learning.  The code for the project is provided as an Arduino sketch.  It is plug and play - you can upload it to an Uno and run it, and there is a section of configuration information that can be used to quickly build and train a customized network.  The write-up provided here gives an overview of artificial neural networks, details of the sketch, and an introduction to some of the basic concepts employed in feed forward networks and the backpropagation algorithm.
+</p>
+<p>
+The sketch is available for download by clicking here: <a href="http://robotics.hobbizine.com/ArduinoANN.zip">ArduinoANN.zip</a>.  The code is also listed in its entirety at the end of the tutorial.  
+</p>
+<p>
+Backpropagation neural networks have been in use since the mid-1980s.  The basic concepts of backpropagation are fairly straightforward and while the algorithm itself involves some higher order mathematics, it is not necessary to fully understand how the equations were derived in order to apply them.  There are some challenges to implementing a network on a very small system, and on earlier generations of inexpensive microcontrollers and hobbyist boards those challenges were significant.  However Arduinos, like many of today's boards, actually make pretty short work of the task.  The Arduino Uno used here is based on Atmel's ATmega328 microcontroller.  Its 2K of SRAM is adequate for a sample network with 7 inputs and 4 outputs, and with Arduino's GCC language support for multidimensional arrays and floating point math, the job of programming is very manageable.
+</p>
+<p>
+So what's it good for?  Neural networks learn by example.  They have been used in applications that range from autonomous vehicle control, to game playing, to facial recognition, to stock market analysis.  Most applications will involve some type of pattern matching where the exact input to a system won't be known and where there may be missing or extraneous information.  Consider the problem of recognizing handwritten characters.  The general shapes of the alphabet can be known ahead of time, but the actual input will always vary.  Of course, the little network built here on an ATmega328 won't be quite up to the task of facial recognition, but there are quite a few experiments in robotic control and machine learning that would be within its grasp.
+</p>
+<p>
+As the name implies, an artificial neural network, frequently abbreviated ANN, is a computing model inspired by nature.  It is an attempt to mimic at a certain level the way a brain stores information and reacts to various inputs.  In nature, the basic building block of a nervous system is a specialized type of cell called a neuron.
+</p>
+<p style="text-align: center"><img src="./01_files/nncell.png" style="border-style: none"></p>
+<p>
+It might be convenient to visualize a neuron as a tiny electro-chemical switch which turns on when stimulated.  Neurons are connected to one another in vast networks.  When a neuron is excited by a stimulus and becomes active, it sends a small charge along this network which in turn causes other neurons in the network to become active. A neuron will have multiple neurons feeding into it and the strength of these connections will vary.  If there is a strong connection from an input, it will provide a lot of stimulus; a weaker connection will provide less.  In a very real sense a neuron can be thought of as adding up all of these inputs of varying strengths and producing an output based on the total.
+</p>
+<p>
+In a software-based artificial neural network, neurons and their connections are constructed as mathematical relationships.  When the software is presented with an input pattern, it feeds this pattern through the network, systematically adding up the inputs to each neuron, calculating the output for that neuron, and using that output to feed the appropriate inputs to other neurons in the network.
+</p>
+<p>
+Determining the strength of the connections between neurons, also known as the weights, becomes the principal preoccupation in neural network application.  In the backpropagation algorithm, the network is originally initialized with random weights.  The network is then presented with a training set of inputs and outputs.  As the inputs are fed through the system, the actual output is compared to the desired output and the error is calculated.  This error is then fed back through the network and the weights are adjusted incrementally according to a learning algorithm.  Over a period of many cycles, typically thousands, the network will ultimately be trained and will give the correct output when presented with an input.
+</p>
+<p>
+In the feed-forward network we're building here, the neurons are arranged in three layers called the input, hidden, and output layers.  All the neurons in one layer are connected to all the neurons in the next layer.  The classic graphic representation of this relationship is pictured below.
+</p>
+<p style="text-align: center"><img src="./01_files/nn3layer.png" style="border-style: none"></p>
+<p>
+The hidden layer plays a crucial role in a feedforward network.  In early neural network models the input neurons were connected directly to the output neurons and the range of solutions that a network could achieve was extremely limited.  One such problem that a two layer model could not solve was the logic of exclusive or - typically represented as XOR.  In Boolean logic, an XOR relationship is one which results in true when either input is true, but when both inputs are true results in false.  A truth table for XOR is pictured below.
+</p>
+
+<p style="text-align: center"><img src="./01_files/nnxor.png" style="border-style: none"></p>
+<p>
+With the addition of a layer in between the inputs and the outputs, the network is able to solve for XOR and much more.  Some theories posit that with other conditions of the network being optimized, a three layer network would be able to solve for any truth table.  Solving for XOR is a good litmus test for a new network.  You'll see it frequently used in examples and it is often referred to as the "Hello World" program of neural networking.
+</p>
+<p>
+The network as implemented in the sketch accompanying this article is just a demonstration and doesn't actually perform any real world function.  The sketch includes a set of training inputs and outputs, and the network is trained to that set until such time as it has achieved a pre-determined level of accuracy.  At that point the sketch declares victory and then restarts.  Along the way the results of the training are periodically sent to the serial port which is monitored using the serial monitor of the Arduino IDE or any other terminal program.  (Note that when using the Arduino IDE it will be necessary to start the serial monitor in the Tools menu after loading the sketch.)
+</p>
+<p>
+The program has been structured such that a network and training set can be assembled very quickly by simply changing the values in a configuration section at the beginning of the sketch. This setup makes it possible to experiment with the network without necessarily understanding all of the the underlying nuance.
+</p>
+<p>
+The configuration section includes two data arrays, Input and Target, that together makeup the truth table of the training set.  For what it's worth, the training set in the sketch is a truth table that maps the seven segments of an led numeric display (0-9) to a binary number (0000 - 1001).  You might think of this as a rudimentary representation of an optical character recognition problem.  If you study the arrays you'll notice that they provide a rich mix in the mapping of inputs and outputs and make for a nice proof of concept that the network can learn to solve a rather difficult problem.
+</p>
+
+<p style="text-align: center"><img src="./01_files/nnsevensegment.png" style="border-style: none"></p>
+
+<p>
+To modify the network to a new training set you must enter the appropriate truth table values in the Input and Target arrays, and you must also adjust the corresponding parameters in the configuration section to match the new truth table:
+</p>
+<ul>
+<li>PatternCount: The number of training items or rows in the truth table.</li>
+<li>InputNodes: The number of input neurons.</li>
+<li>OutputNodes: The number of output neurons.</li>
+</ul>
+<p>
+There are several additional items that can be configured in this section for experimentation.  
+</p>
+<ul>
+<li>HiddenNodes: The number of hidden neurons.<br>
+</li><li>LearningRate: Adjusts how much of the error is actually backpropagated.</li>
+<li>Momentum: Adjusts how much the results of the previous iteration affect the current iteration.</li>
+<li>InitialWeightMax: Sets the maximum starting value for weights.</li>
+<li>Success: The threshold for error at which the network will be said to have solved the training set.</li>
+</ul>
+<p>
+As a general concept, HiddenNodes, LearningRate, Momentum and InitialWeightMax all work together to optimize the network for learning effectiveness and speed, while minimizing certain pitfalls that are encountered in neural network design.
+</p>
+<p>
+A lower value for LearningRate results in a slower training process but reduces the likelihood of the network going into an oscillation where it continually overshoots the solution to the training problem and never achieves the success threshold.  In our demo LearningRate is set at .3.  For large, very complex networks (much larger than we could build on the Arduino Uno), the value is often set very low - on the order of .01.
+</p>
+<p>
+Momentum smoothes the training process by injecting a portion of the previous backpropagation into the current backpropagation.  Momentum serves to help prevent a phenomenon where the network converges on a solution which is good but not best, also known as converging on the local minimum.  Momentum values need to be between 0 and 1.
+</p>
+<p>
+The number of hidden neurons can affect the speed with which a network can be trained, the complexity of problems the network can solve, and can help to prevent converging on the local minimum. You'll want to have at least as many hidden neurons as output neurons, and you may want considerably more.  The downside to a large number of hidden neurons is the large number of weights that need to be stored.
+</p>
+<p>
+The initial randomized weights should be relatively small.  The value for InitialWeightMax in the configuration provided with the sketch is .5.  This will set all of the initial weights to between -.5 and .5 which is a good starting point.
+</p>
+<p>
+The ideal values for these parameters varies greatly depending on the training data and there really is no straightforward best practice for choosing them; experience combined with trial and error seems to be the approach.
+</p>
+<p>
+The final value in the configuration section, Success, sets the threshold level of error in the system when the training set will be considered learned.  It is a very small number greater than zero.  It is the nature of this type of network that the total error in the system will approach zero, but never actually reach it.
+</p>
+<p>
+Be aware that the sample network with 7 inputs, 8 hidden neurons, and 4 outputs is about as large as you'll be able to run on the Arduino Uno's 2K SRAM.  Unfortunately, there is no warning if you run out of memory on the Arduino, the behavior of the sketch will simply become erratic.  The good news is that the list of Arduino and Arduino compatible systems with SRAM allocations greater than 2K is growing all the time.  If you become a full-fledged neural network experimenter you'll have plenty of options to choose from.
+</p>
+<p>
+At this point we've covered enough ground for you to copy the code for the sample network to your own computer, upload it to the Arduino, and experiment with the various settings.
+</p>
+<p>
+Looking beyond the configuration section we now turn to the sketch itself.  The basic strategy in implementing a neural network as a C program is to establish a framework of data arrays to hold the weights and to track accumulating totals as signals are fed forward and errors are fed backward through the network.  A sequence of nested FOR loops iterates through these arrays making the various calculations required as the backpropagation algorithm is executed.  The arrays and other variables and constants have been given names that correspond to their function in the network; those names will become more clear as you progress through the rest of the explanation.
+</p>
+<p>
+Although the code is not at the absolute beginner level, if you have familiarity with the concepts of arrays and looping, you should hopefully be able to read through the sketch which accompanies this article and follow the logic.  Here is a high level breakdown:
+</p><ul>
+<li>Initialize the arrays.  The weights are set to random numbers and two additional arrays that hold change values used in backpropagation are set to zeros.</li>
+<li>Begin a large loop that runs the system through a complete set of the training data.</li>
+<li>Randomize the order in which the training sets run on each iteration to reduce oscillation or convergence on local minimums.</li>
+<li>Calculate the hidden layer activations, output layer activations and errors.</li>
+<li>Backpropagate the errors to the hidden layer.</li>
+<li>Update the weights.</li>
+<li>If the system error is greater than the success threshold then run another iteration of the training data.</li>
+<li>If the system error is less than the success threshold then break, declare success, and send data to the serial terminal.</li>
+<li>Every 1000 cycles send the results of a test run of the training set to the serial terminal.</li>
+</ul>
+<p></p>
+<p>
+In addition to the programming logic, there are three fundamental concepts of the network to be understood: the activation function, gradient decent, and bias.
+</p>
+<p>
+The activation function calculates the output of a neuron based on the sum of the weighted connections feeding into that neuron.  While there are variations, this sketch uses the most common activation function which is called the Sigmoid Function because of its distinctive shape as seen in the graph below.
+</p>
+
+<p style="text-align: center"><img src="./01_files/nnsigmoid.png" style="border-style: none"></p>
+<p>
+The critical feature of the function is that regardless of the input, the output will fall between 0 and 1. This feature is very handy in coding a neural network because the output of a neuron can always be expressed in a range between full on and full off.  The activation function is seen in several places in the code where it takes the general form:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  output = 1.0/(1.0 + exp(-Accum)) 
+</pre>
+</td>
+</tr>
+</tbody></table>
+
+<p>
+with output being the array variable representing the output of the neuron being activated and Accum being the total of the weighted inputs to that neuron.  The intricacies of the specific formula are not important other than that they conveniently produce the sigmoid output.
+</p>
+<p>
+Gradient descent is the secret sauce of backpropagation.  It is a mathematical approach that enables us to calculate the magnitude of the error at each output neuron, determine how much each connection to that neuron contributed to the error, and make incremental adjustments in the weights of those connections that will systematically reduce the error.  
+</p>
+<p>
+The first step in gradient descent is to calculate a value called the delta for each neuron.  The delta reflects the magnitude of the error - the greater the difference between the target value for the neuron and its actual output, the larger the delta.  At the output layer the delta calculation is straightforward:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  delta = (target - actual) * actual * (1 - actual)
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+which is seen in the code as
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  OutputDelta[i] = (Target[p][i] - Output[i]) * Output[i] * (1.0 - Output[i]) ;
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+Calculating the delta at the hidden layer becomes slightly more involved as there is no target to measure against.  Instead, the magnitude of the error for each hidden neuron is derived from the relationship between the weights and the delta that was calculated for the output layer.  For each hidden neuron, the code steps through all of the output connections multiplying the weights by the deltas and keeping a running total:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  Accum += OutputWeights[i][j] * OutputDelta[j] ;
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+Then the inner layer delta is then calculated by substituting the value stored in Accum for the Target[p][i] - Output[i] value in the formula seen in the first calculation which becomes:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  HiddenDelta[i] = Accum * Hidden[i] * (1.0 - Hidden[i]) ;
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+With the delta values for the two layers calculated, the next step is to actually work through and adjust the weights.  It is here that we see how values for learning rate and momentum modify the changes to the weight.  For each weight the amount to change is determined by this formula:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  change = (learning rate * weight * delta) + (momentum * previous change)
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+and then the new weight is found by adding the old weight to the change value:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  weight = weight + change
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+For the weights between the inner and hidden layers that formula appears in the code as:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  ChangeHiddenWeights[j][i] = LearningRate * Input[p][j] * HiddenDelta[i] + Momentum * ChangeHiddenWeights[j][i];
+  HiddenWeights[j][i] += ChangeHiddenWeights[j][i] ;
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+For the weights between the hidden and the output layers the formula appears in the code as:
+</p>
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>  ChangeOutputWeights[j][i] = LearningRate * Hidden[j] * OutputDelta[i] + Momentum * ChangeOutputWeights[j][i] ;
+  OutputWeights[j][i] += ChangeOutputWeights[j][i] ;
+</pre>
+</td>
+</tr>
+</tbody></table>
+<p>
+Lastly we come to bias, a relatively straightforward notion that can nonetheless make the code a little confusing when not understood.  The input and hidden layers each contain an extra neuron that always fires (in other words it always has an implied activation of "1").  The bias value has several positive effects on the network.  It adds stability and expands the number of possible solutions.  Most importantly it eliminates the possibility of having all the inputs be zero and therefore having no signal propagate through the network.  If you look at the declarations for the arrays which hold the weights and the change values, you'll see that extra neuron.  Also, you'll see in the nested loops that handle the activation and updating functions that there are separate calculations for the bias neurons that do not rely on an input value.
+</p>
+<p>
+With that we'll conclude the discussion of the network.  If the concepts presented here were all new to you, it will undoubtedly require some continued effort to develop a satisfying understanding of how backpropagation works.  There is no lack of material available related to neural networks, however much of it goes fairly deep into the mathematical theory and is not helpful to the beginner trying to grapple with the basic concepts and translate them to code.
+</p>
+<p>
+John Bullinaria of the University of Birmingham's School of Computer Science has posted a Step by Step Guide to Implementing a Neural Network in C at <a href="http://www.cs.bham.ac.uk/~jxb/NN/nn.html">www.cs.bham.ac.uk/~jxb/NN/nn.html</a>.  This guide is a particularly useful resource which I found invaluable in preparing this article.
+</p>
+<p>
+Two additional resources that would be useful for getting started can be found at TEK271.com:  <a href="http://www.tek271.com/?about=docs/neuralNet/IntoToNeuralNets.html">http://www.tek271.com/?about=docs/neuralNet/IntoToNeuralNets.html</a> and the Robotics Society of Southern California: <a href="http://www.rssc.org/content/introduction-neural-nets-part-1">http://www.rssc.org/content/introduction-neural-nets-part-1</a>.
+</p>
+<p>
+The complete code to accompany this tutorial appears below.  Click here to download: <a href="http://robotics.hobbizine.com/ArduinoANN.zip">ArduinoANN.zip</a>
+</p>
+
+<table width="100%">
+<tbody><tr>
+<td bgcolor="#C6DEFF">
+<pre>#include&nbsp;&lt;math.h&gt;
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">&nbsp;*&nbsp;Network&nbsp;Configuration&nbsp;-&nbsp;customized&nbsp;per&nbsp;network&nbsp;</span>
+<span style="color: #7E7E7E;">&nbsp;******************************************************************/</span>
+
+const&nbsp;<span style="color: #CC6600;">int</span> PatternCount = 10;
+const&nbsp;<span style="color: #CC6600;">int</span> InputNodes = 7;
+const&nbsp;<span style="color: #CC6600;">int</span> HiddenNodes = 8;
+const&nbsp;<span style="color: #CC6600;">int</span> OutputNodes = 4;
+const&nbsp;<span style="color: #CC6600;">float</span> LearningRate = 0.3;
+const&nbsp;<span style="color: #CC6600;">float</span> Momentum = 0.9;
+const&nbsp;<span style="color: #CC6600;">float</span> InitialWeightMax = 0.5;
+const&nbsp;<span style="color: #CC6600;">float</span> Success = 0.0004;
+
+const&nbsp;<span style="color: #CC6600;">byte</span> Input[PatternCount][InputNodes] = {
+&nbsp;&nbsp;{&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;0&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 0</span>
+&nbsp;&nbsp;{&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;0,&nbsp;0&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 1</span>
+&nbsp;&nbsp;{&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;1&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 2</span>
+&nbsp;&nbsp;{&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;1&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 3</span>
+&nbsp;&nbsp;{&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;1,&nbsp;1&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 4</span>
+&nbsp;&nbsp;{&nbsp;1,&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;1,&nbsp;1&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 5</span>
+&nbsp;&nbsp;{&nbsp;0,&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 6</span>
+&nbsp;&nbsp;{&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;0,&nbsp;0&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 7 </span>
+&nbsp;&nbsp;{&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;1&nbsp;},&nbsp;&nbsp;<span style="color: #7E7E7E;">// 8</span>
+&nbsp;&nbsp;{&nbsp;1,&nbsp;1,&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;1,&nbsp;1&nbsp;}&nbsp;&nbsp;&nbsp;<span style="color: #7E7E7E;">// 9</span>
+};&nbsp;
+
+const&nbsp;<span style="color: #CC6600;">byte</span> Target[PatternCount][OutputNodes] = {
+&nbsp;&nbsp;{&nbsp;0,&nbsp;0,&nbsp;0,&nbsp;0&nbsp;},&nbsp;&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;0,&nbsp;0,&nbsp;1&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;0,&nbsp;1,&nbsp;0&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;0,&nbsp;1,&nbsp;1&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;1,&nbsp;0,&nbsp;0&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;1,&nbsp;0,&nbsp;1&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;0&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;0,&nbsp;1,&nbsp;1,&nbsp;1&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;0&nbsp;},&nbsp;
+&nbsp;&nbsp;{&nbsp;1,&nbsp;0,&nbsp;0,&nbsp;1&nbsp;}&nbsp;
+};
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">&nbsp;*&nbsp;End&nbsp;Network&nbsp;Configuration</span>
+<span style="color: #7E7E7E;">&nbsp;******************************************************************/</span>
+
+
+<span style="color: #CC6600;">int</span> i, j, p, q, r;
+<span style="color: #CC6600;">int</span> ReportEvery1000;
+<span style="color: #CC6600;">int</span> RandomizedIndex[PatternCount];
+<span style="color: #CC6600;">long</span>  TrainingCycle;
+<span style="color: #CC6600;">float</span> Rando;
+<span style="color: #CC6600;">float</span> Error;
+<span style="color: #CC6600;">float</span> Accum;
+
+
+<span style="color: #CC6600;">float</span> Hidden[HiddenNodes];
+<span style="color: #CC6600;">float</span> Output[OutputNodes];
+<span style="color: #CC6600;">float</span> HiddenWeights[InputNodes+1][HiddenNodes];
+<span style="color: #CC6600;">float</span> OutputWeights[HiddenNodes+1][OutputNodes];
+<span style="color: #CC6600;">float</span> HiddenDelta[HiddenNodes];
+<span style="color: #CC6600;">float</span> OutputDelta[OutputNodes];
+<span style="color: #CC6600;">float</span> ChangeHiddenWeights[InputNodes+1][HiddenNodes];
+<span style="color: #CC6600;">float</span> ChangeOutputWeights[HiddenNodes+1][OutputNodes];
+
+<span style="color: #CC6600;">void</span> <span style="color: #CC6600;"><b>setup</b></span>(){
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">begin</span>(9600);
+&nbsp;&nbsp;<span style="color: #CC6600;">randomSeed</span>(<span style="color: #CC6600;">analogRead</span>(3));
+&nbsp;&nbsp;ReportEvery1000&nbsp;=&nbsp;1;
+&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( p = 0 ; p &lt; PatternCount ; p++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;RandomizedIndex[p]&nbsp;=&nbsp;p&nbsp;;
+&nbsp;&nbsp;}
+}&nbsp;&nbsp;
+
+<span style="color: #CC6600;">void</span> <span style="color: #CC6600;"><b>loop</b></span> (){
+
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Initialize&nbsp;HiddenWeights&nbsp;and&nbsp;ChangeHiddenWeights&nbsp;</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; HiddenNodes ; i++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt;= InputNodes ; j++ ) { 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ChangeHiddenWeights[j][i]&nbsp;=&nbsp;0.0&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rando&nbsp;=&nbsp;<span style="color: #CC6600;">float</span>(<span style="color: #CC6600;">random</span>(100))/100;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HiddenWeights[j][i]&nbsp;=&nbsp;2.0&nbsp;*&nbsp;(&nbsp;Rando&nbsp;-&nbsp;0.5&nbsp;)&nbsp;*&nbsp;InitialWeightMax&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Initialize&nbsp;OutputWeights&nbsp;and&nbsp;ChangeOutputWeights</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; OutputNodes ; i ++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt;= HiddenNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ChangeOutputWeights[j][i]&nbsp;=&nbsp;0.0&nbsp;;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Rando&nbsp;=&nbsp;<span style="color: #CC6600;">float</span>(<span style="color: #CC6600;">random</span>(100))/100;        
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OutputWeights[j][i]&nbsp;=&nbsp;2.0&nbsp;*&nbsp;(&nbsp;Rando&nbsp;-&nbsp;0.5&nbsp;)&nbsp;*&nbsp;InitialWeightMax&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span>(<span style="color: #006699;">"Initial/Untrained Outputs: "</span>);
+&nbsp;&nbsp;toTerminal();
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Begin&nbsp;training&nbsp;</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( TrainingCycle = 1 ; TrainingCycle &lt; 2147483647 ; TrainingCycle++) {    
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Randomize&nbsp;order&nbsp;of&nbsp;training&nbsp;patterns</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( p = 0 ; p &lt; PatternCount ; p++) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;q&nbsp;=&nbsp;<span style="color: #CC6600;">random</span>(PatternCount);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;=&nbsp;RandomizedIndex[p]&nbsp;;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RandomizedIndex[p]&nbsp;=&nbsp;RandomizedIndex[q]&nbsp;;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RandomizedIndex[q]&nbsp;=&nbsp;r&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;Error&nbsp;=&nbsp;0.0&nbsp;;
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Cycle&nbsp;through&nbsp;each&nbsp;training&nbsp;pattern&nbsp;in&nbsp;the&nbsp;randomized&nbsp;order</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( q = 0 ; q &lt; PatternCount ; q++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p&nbsp;=&nbsp;RandomizedIndex[q];
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Compute&nbsp;hidden&nbsp;layer&nbsp;activations</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; HiddenNodes ; i++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;=&nbsp;HiddenWeights[InputNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; InputNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;+=&nbsp;Input[p][j]&nbsp;*&nbsp;HiddenWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hidden[i]&nbsp;=&nbsp;1.0/(1.0&nbsp;+&nbsp;<span style="color: #CC6600;">exp</span>(-Accum)) ;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Compute&nbsp;output&nbsp;layer&nbsp;activations&nbsp;and&nbsp;calculate&nbsp;errors</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; OutputNodes ; i++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;=&nbsp;OutputWeights[HiddenNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; HiddenNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;+=&nbsp;Hidden[j]&nbsp;*&nbsp;OutputWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Output[i]&nbsp;=&nbsp;1.0/(1.0&nbsp;+&nbsp;<span style="color: #CC6600;">exp</span>(-Accum)) ;   
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OutputDelta[i]&nbsp;=&nbsp;(Target[p][i]&nbsp;-&nbsp;Output[i])&nbsp;*&nbsp;Output[i]&nbsp;*&nbsp;(1.0&nbsp;-&nbsp;Output[i])&nbsp;;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Error&nbsp;+=&nbsp;0.5&nbsp;*&nbsp;(Target[p][i]&nbsp;-&nbsp;Output[i])&nbsp;*&nbsp;(Target[p][i]&nbsp;-&nbsp;Output[i])&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Backpropagate&nbsp;errors&nbsp;to&nbsp;hidden&nbsp;layer</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; HiddenNodes ; i++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;=&nbsp;0.0&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; OutputNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;+=&nbsp;OutputWeights[i][j]&nbsp;*&nbsp;OutputDelta[j]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HiddenDelta[i]&nbsp;=&nbsp;Accum&nbsp;*&nbsp;Hidden[i]&nbsp;*&nbsp;(1.0&nbsp;-&nbsp;Hidden[i])&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Update&nbsp;Inner--&gt;Hidden&nbsp;Weights</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; HiddenNodes ; i++ ) {     
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ChangeHiddenWeights[InputNodes][i]&nbsp;=&nbsp;LearningRate&nbsp;*&nbsp;HiddenDelta[i]&nbsp;+&nbsp;Momentum&nbsp;*&nbsp;ChangeHiddenWeights[InputNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HiddenWeights[InputNodes][i]&nbsp;+=&nbsp;ChangeHiddenWeights[InputNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; InputNodes ; j++ ) { 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ChangeHiddenWeights[j][i]&nbsp;=&nbsp;LearningRate&nbsp;*&nbsp;Input[p][j]&nbsp;*&nbsp;HiddenDelta[i]&nbsp;+&nbsp;Momentum&nbsp;*&nbsp;ChangeHiddenWeights[j][i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HiddenWeights[j][i]&nbsp;+=&nbsp;ChangeHiddenWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Update&nbsp;Hidden--&gt;Output&nbsp;Weights</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; OutputNodes ; i ++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ChangeOutputWeights[HiddenNodes][i]&nbsp;=&nbsp;LearningRate&nbsp;*&nbsp;OutputDelta[i]&nbsp;+&nbsp;Momentum&nbsp;*&nbsp;ChangeOutputWeights[HiddenNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OutputWeights[HiddenNodes][i]&nbsp;+=&nbsp;ChangeOutputWeights[HiddenNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; HiddenNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ChangeOutputWeights[j][i]&nbsp;=&nbsp;LearningRate&nbsp;*&nbsp;Hidden[j]&nbsp;*&nbsp;OutputDelta[i]&nbsp;+&nbsp;Momentum&nbsp;*&nbsp;ChangeOutputWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OutputWeights[j][i]&nbsp;+=&nbsp;ChangeOutputWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Every&nbsp;1000&nbsp;cycles&nbsp;send&nbsp;data&nbsp;to&nbsp;terminal&nbsp;for&nbsp;display</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+&nbsp;&nbsp;&nbsp;&nbsp;ReportEvery1000&nbsp;=&nbsp;ReportEvery1000&nbsp;-&nbsp;1;
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">if</span> (ReportEvery1000 == 0)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span>(); 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span>(); 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"TrainingCycle: "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (TrainingCycle);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"  Error = "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> (Error, 5);
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;toTerminal();
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">if</span> (TrainingCycle==1)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ReportEvery1000&nbsp;=&nbsp;999;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">else</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ReportEvery1000&nbsp;=&nbsp;1000;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;If&nbsp;error&nbsp;rate&nbsp;is&nbsp;less&nbsp;than&nbsp;pre-determined&nbsp;threshold&nbsp;then&nbsp;end</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">if</span>( Error &lt; Success ) <span style="color: #CC6600;">break</span> ;  
+&nbsp;&nbsp;}
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> ();
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span>(); 
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"TrainingCycle: "</span>);
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (TrainingCycle);
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"  Error = "</span>);
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> (Error, 5);
+
+&nbsp;&nbsp;toTerminal();
+
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> ();  
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> ();
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> (<span style="color: #006699;">"Training Set Solved! "</span>);
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> (<span style="color: #006699;">"--------"</span>); 
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> ();
+&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> ();  
+&nbsp;&nbsp;ReportEvery1000&nbsp;=&nbsp;1;
+}
+
+<span style="color: #CC6600;">void</span> toTerminal()
+{
+
+&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( p = 0 ; p &lt; PatternCount ; p++ ) { 
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span>(); 
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"  Training Pattern: "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">println</span> (p);      
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"  Input "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; InputNodes ; i++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (Input[p][i], <span style="color: #006699;">DEC</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">" "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"  Target "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; OutputNodes ; i++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (Target[p][i], <span style="color: #006699;">DEC</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">" "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Compute&nbsp;hidden&nbsp;layer&nbsp;activations</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; HiddenNodes ; i++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;=&nbsp;HiddenWeights[InputNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; InputNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;+=&nbsp;Input[p][j]&nbsp;*&nbsp;HiddenWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hidden[i]&nbsp;=&nbsp;1.0/(1.0&nbsp;+&nbsp;<span style="color: #CC6600;">exp</span>(-Accum)) ;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+
+<span style="color: #7E7E7E;">/******************************************************************</span>
+<span style="color: #7E7E7E;">*&nbsp;Compute&nbsp;output&nbsp;layer&nbsp;activations&nbsp;and&nbsp;calculate&nbsp;errors</span>
+<span style="color: #7E7E7E;">******************************************************************/</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; OutputNodes ; i++ ) {    
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;=&nbsp;OutputWeights[HiddenNodes][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( j = 0 ; j &lt; HiddenNodes ; j++ ) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Accum&nbsp;+=&nbsp;Hidden[j]&nbsp;*&nbsp;OutputWeights[j][i]&nbsp;;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Output[i]&nbsp;=&nbsp;1.0/(1.0&nbsp;+&nbsp;<span style="color: #CC6600;">exp</span>(-Accum)) ; 
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">"  Output "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;">for</span>( i = 0 ; i &lt; OutputNodes ; i++ ) {       
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (Output[i], 5);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #CC6600;"><b>Serial</b></span>.<span style="color: #CC6600;">print</span> (<span style="color: #006699;">" "</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+
+
+}
+
+
+
+</pre>
+</td>
+</tr>
+</tbody></table>
+				
+<hr>
+<p>
+About the Author:  Ralph Heymsfeld is the founder and principal of <a href="http://sullystationsolutions.com/">Sully Station Solutions</a>.  His interests include artificial intelligence, machine learning, robotics and embedded systems.  His writings on these on other diverse topics appear regularly here and across the Internet.
+</p>
+<hr>
+
+<h3>Other Articles You Might Find Enjoyable</h3>
+
+<p>
+<a href="http://robotics.hobbizine.com/opencv.html">Haar LBP and HOG - Experiments in OpenCV Object Detection</a><br>
+I've spent some time lately coming up-to-speed and playing with OpenCV - especially the object detection routines. Three that caught my eye for further investigation were Haar Cascades, Local Binary Patterns (LBP), and Histogram of Oriented Gradients (HOG).
+</p>
+
+<p>
+<a href="http://robotics.hobbizine.com/icestorm.html">iCE40 and the IceStorm Open Source FPGA Workflow</a><br>
+Project IceStorm is the first, and currently only, fully open source workflow for FPGA programming.  Here, the software and hardware are discussed and a small sample project implemented.
+</p>
+
+<p>
+<a href="http://robotics.hobbizine.com/asmlau.html">LaunchPad MSP430 Assembly Language Tutorial</a><br>
+One of my more widely read tutorials.  Uses the Texas Instruments LaunchPad with its included MSP430G2231 processor to introduce MSP430 assembly language programming.
+</p>
+
+<p>
+<a href="http://robotics.hobbizine.com/raspiduino.html">Raspberry Pi to Arduino SPI Communication</a><br>
+This tutorial presents a basic framework for Raspberry Pi to Arduino communication and control using SPI - the Serial Peripheral Interface bus.
+</p>
+
+<p>
+<a href="http://robotics.hobbizine.com/fpgalcd.html">Adding a Character LCD to an FPGA Project</a><br>
+Adding a text LCD to an FPGA project is a simple and inexpensive way to get your project talking.  This post discusses interfacing an FPGA with garden-variety generic 16 character by two-line LCD.
+</p>
+
+<p>
+<a href="http://salamistablet.com/antikythera.html">The Antikythera Mechanism and the History of Clockwork</a><br>
+Discovered in an ancient shipwreck on the southern periphery of the Aegean Sea, the Antikythera Mechanism is a 2,000 year old astronomical computer.  Its discovery turned conventional wisdom on its head and forced scholars to rewrite the history of ancient technology and the origins of complex clockwork devices.
+</p>
+
+<p>
+<a href="http://salamistablet.com/vacuum-tube.html">The Vacuum Tube in Computer History</a><br>
+The vacuum tube holds a particularly significant place in the evolution of electronic computing. With the invention of the triode in 1907 and a flurry of subsequent improvements, computing pioneers finally had the means to create fully electronic digital logic circuits.
+</p>
+
+<p>
+<a href="http://salamistablet.com/shannon.html">From Boole to Bits - Claude Shannon's Digital Revolution</a><br>
+Claude Shannon propelled computer engineering into the modern age in 1937 when he published a paper demonstrating that Boolean algebra can be applied to the design of electronic circuits to express any mathematical or logical function.
+</p>
+
+<p>
+<a href="http://salamistablet.com/stibitz.html">George Stibitz and the Bell Laboratories Relay Computers</a><br>
+In the 1940s, driven by the innovations of George Stibitz and a heritage in switching technology, Bell Telephone Laboratories produced a series of increasingly capable computers using electromagnetic relay logic circuits.
+</p>
+
+<p>
+<a href="http://salamistablet.com/hopper.html">Grace Hopper - Matriarch of Programming</a><br>
+Grace Murray Hopper enjoyed one of the most storied careers in computing history. From the earliest days working on the Harvard Mark I, her insights and innovations helped establish the foundations for modern, user friendly computers and launched the information age.
+</p>
+
+<p>
+<a href="http://salamistablet.com/altair.html">SCELBI, Altair and the Journey to Home Computing</a><br>
+In the late 1960s and early 1970s a network of electronics enthusiasts galvanized around the idea of building their own computers.  The hobby computers they brought to market were an entirely new class of machine that created fortunes and shaped the personal computer industry well into the twenty first century.
+</p>
+
+<p>
+<a href="http://salamistablet.com/vic20.html">The Commodore VIC-20 - The Friendly Computer</a><br>
+Released in 1981, the Commodore VIC-20 was the best selling computer of its day.  Inexpensive and user-friendly, the computer opened up the market to a new group of consumers.  It was the first computer many families owned, providing the earliest exposure to computing for countless future programmers, engineers and entrepreneurs around the world.
+</p>
+
+<p>
+<a href="http://robotics.hobbizine.com/flexinol.html">Flexinol and other Nitinol Muscle Wires</a><br>
+With its unique ability to contract on demand, Muscle Wire (or more generically, shape memory actuator wire) presents many intriguing possibilities for robotics.  Nitinol actuator wires are able to contract with significant force, and can be useful in many applications where a servo motor or solenoid might be considered.
+</p>
+
+<p>
+<a href="http://robotics.hobbizine.com/flexinolresist.html">Precision Flexinol Position Control Using Arduino</a><br>
+An approach to precision control of Flexinol contraction based on controlling the voltage in the circuit.  In addition, taking advantage of the fact that the resistance of Flexinol drops predictably as it contracts, the mechanism described here uses the wire itself as a sensor in a feedback control loop.
+</p>
+
+
+				<p></p>
+<br class="clear">
+			
+				<div class="post">
+				
+				</div>
+		
+			</div>
+	
+		</div>
+		
+		<div id="secondaryContent_2columns">
+		
+			<div id="columnC_2columns">
+	
+				<h4><span>Things </span>to Do Here</h4>
+                                <p>
+                                <a href="http://www.hobbizine.com/index.html">Home</a><br>
+				<a href="http://links.hobbizine.com/index.html">Links</a>
+                                </p><p>
+				
+
+<script language="JavaScript" src="./01_files/slot003.js.&#19979;&#36617;"></script></p><center>
+<hr>
+<br>
+<a href="http://www.amazon.com/dp/B00E1GGE40/?tag=hobbizine-20"><img border="0" src="./01_files/picamera.png"></a><br>
+<a href="http://www.amazon.com/dp/B00E1GGE40/?tag=hobbizine-20">Raspberry PI 5MP Camera Board Module</a><br><br>
+</center>
+A 5 megapixel custom designed add-on for Raspberry Pi, featuring a fixed focus lens. It is capable of 2592 x 1944 pixel static images, and also supports video. It attaches to Pi by way of one of the small sockets on the board upper surface and uses the dedicated CSi interface, designed especially for interfacing to cameras. <br><a href="http://www.amazon.com/dp/B00E1GGE40/?tag=hobbizine-20">...more</a>
+<br><br>
+<center>
+<hr>
+<br>
+<a href="http://www.amazon.com/dp/B005UTBP8W/?tag=hobbizine-20"><img border="0" src="./01_files/4amotordriver.png"></a><br>
+<a href="http://www.amazon.com/dp/B005UTBP8W/?tag=hobbizine-20">4A Dual Bi-Directional Motor Driver</a><br><br>
+</center>
+Based on the L298 dual h-bridge motor driver, the board will allow you to easily and independently control two motors of up to 2A each in both directions.<br><a href="http://www.amazon.com/dp/B005UTBP8W/?tag=hobbizine-20">...more</a>
+<br><br>
+<center>
+<hr>
+<br>
+<a href="http://www.amazon.com/dp/B007XQRKD4/?tag=hobbizine-20"><img border="0" src="./01_files/humansensor.png"></a><br>
+<a href="http://www.amazon.com/dp/B007XQRKD4/?tag=hobbizine-20">HC-SR501 Human Sensor Module</a><br><br>
+</center>
+Passive Infrared sensors (also called Pyroelectric sensors), are sensitive heat detectors that can be used to detect motion such as when a person (or other warm-blooded critter) enters or crosses a room.<br><a href="http://www.amazon.com/dp/B007XQRKD4/?tag=hobbizine-20">...more</a>
+<br><br>
+<center>
+<hr>
+<br>
+<a href="http://www.amazon.com/gp/product/0071422749/?tag=hobbizine-20"><img border="0" src="./01_files/humanoid.jpg"></a><br>
+<a href="http://www.amazon.com/gp/product/0071422749/?tag=hobbizine-20">Build Your Own Humanoid Robots: 6 Amazing and Affordable Projects</a><br><br>
+</center>
+Step-by-step directions for 6 exciting projects, which together form the essential ingredients for designing a humanoid, and ultimately in the final section building a complete biped robot. Along the way build a robotic arm, wrist, and hand, learn how to interface to a personal computer for complete control and feedback, develop voice control systems and much more.<br><a href="http://www.amazon.com/gp/product/0071422749/?tag=hobbizine-20">...more</a>
+<br><br>
+<center>
+<hr>
+<br>
+<a href="http://www.amazon.com/gp/product/0071427783/?tag=hobbizine-20"><img border="0" src="./01_files/behaviorbased.jpg"></a><br>
+<a href="http://www.amazon.com/gp/product/0071427783/?tag=hobbizine-20">Robot Programming : A Practical Guide to Behavior Based Robotics</a><br><br>
+</center>
+A very solid introduction to the theories of modern behavior-based programming.  Written by one of the pioneers in the field, the book is well regarded for being accessible to beginners while providing enough depth to be able to apply the principles to your own projects.<br><a href="http://www.amazon.com/gp/product/0071427783/?tag=hobbizine-20">...more</a>
+<br><br>
+<center>
+<hr>
+<br>
+<a href="http://www.amazon.com/gp/product/B000RSOV50/?tag=hobbizine-20"><img border="0" src="./01_files/bc700.jpg"></a>
+<a href="http://www.amazon.com/gp/product/B000RSOV50/?tag=hobbizine-20">La Crosse Technology BC-700 Alpha Power Battery Charger</a><br>
+</center>
+Take control of your rechargeable batteries.  The BC 700 Alpha features four independent slots each with its own display.  Charge one to four batteries in any combination of AA or AAA, NiCad or NiMH.  Three charging rates from 200ma to 700ma with charge, discharge, refresh and test modes.  Has overheat detection to prevent over-charging.<br><a href="http://www.amazon.com/gp/product/B000RSOV50/?tag=hobbizine-20">...more</a><br>
+<br>
+<center>
+<hr>
+<br>
+<a href="http://www.amazon.com/gp/product/B000IV2YLY/?tag=hobbizine-20"><img border="0" src="./01_files/eneloop.jpg"></a>
+<a href="http://www.amazon.com/gp/product/B000IV2YLY/?tag=hobbizine-20">Sanyo Eneloop AAA NiMH Pre-Charged Rechargeable Batteries</a><br>
+</center>
+These extremely low self-discharge rechargeables give you all the benefits of NiMH with the ready-to-go performance of alkaline.  They provide up to four times longer life than disposables in digital cameras and other high drain applications, perform even in low temperatures, and are rated for up to 1,000 recharges without degrading.  Best of all their low discharge characteristics mean they come ready to use right out of the pack and can maintain 85 percent of their capacity a full year after their last recharge.<br><a href="http://www.amazon.com/gp/product/B000IV2YLY/?tag=hobbizine-20">...more</a><br>
+<br>
+
+<br><br>
+				
+<script type="text/javascript"><!--
+google_ad_client = "ca-pub-8349793200726369";
+/* Robotics and Electronics */
+google_ad_slot = "4194828803";
+google_ad_width = 160;
+google_ad_height = 600;
+//-->
+</script>
+<script type="text/javascript" src="./01_files/f(9).txt">
+</script><ins id="aswift_1_expand" style="display:inline-table;border:none;height:600px;margin:0;padding:0;position:relative;visibility:visible;width:160px;background-color:transparent;" data-ad-slot="4194828803" data-overlap-observer-io="false"><ins id="aswift_1_anchor" style="display:block;border:none;height:600px;margin:0;padding:0;position:relative;visibility:visible;width:160px;background-color:transparent;"><iframe width="160" height="600" frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" onload="var i=this.id,s=window.google_iframe_oncopy,H=s&amp;&amp;s.handlers,h=H&amp;&amp;H[i],w=this.contentWindow,d;try{d=w.document}catch(e){}if(h&amp;&amp;d&amp;&amp;(!d.body||!d.body.firstChild)){if(h.call){setTimeout(h,0)}else if(h.match){try{h=s.upd(h,i)}catch(e){}w.location.replace(h)}}" id="aswift_1" name="aswift_1" style="left:0;position:absolute;top:0;border:0px;width:160px;height:600px;" src="./01_files/saved_resource(2).html"></iframe></ins></ins>
+
+<br>
+<br>
+
+
+
+
+
+
+
+<br>
+<br>
+<hr>
+<p>
+<a href="http://www.hobbizine.com/privacy.html">Privacy Policy</a>
+</p>
+	
+<br>
+<br>
+
+</div>
+		</div>
+		<br class="clear">
+	</div>
+</div>
+<div id="footer" class="fluid">
+
+</div>
+
+
+<iframe id="google_osd_static_frame_1244871383630" name="google_osd_static_frame" style="display: none; width: 0px; height: 0px;" src="./01_files/saved_resource(3).html"></iframe><ins class="adsbygoogle adsbygoogle-noablate" data-adsbygoogle-status="done" style="display: none !important;"><ins id="aswift_2_expand" style="display:inline-table;border:none;height:0px;margin:0;padding:0;position:relative;visibility:visible;width:0px;background-color:transparent;"><ins id="aswift_2_anchor" style="display:block;border:none;height:0px;margin:0;padding:0;position:relative;visibility:visible;width:0px;background-color:transparent;"><iframe frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" onload="var i=this.id,s=window.google_iframe_oncopy,H=s&amp;&amp;s.handlers,h=H&amp;&amp;H[i],w=this.contentWindow,d;try{d=w.document}catch(e){}if(h&amp;&amp;d&amp;&amp;(!d.body||!d.body.firstChild)){if(h.call){setTimeout(h,0)}else if(h.match){try{h=s.upd(h,i)}catch(e){}w.location.replace(h)}}" id="aswift_2" name="aswift_2" style="left:0;position:absolute;top:0;border:0px;width:0px;height:0px;" src="./01_files/saved_resource(4).html"></iframe></ins></ins></ins></body><iframe id="google_esf" name="google_esf" src="./01_files/zrt_lookup.html" data-ad-client="ca-pub-8349793200726369" style="display: none;"></iframe></html>
